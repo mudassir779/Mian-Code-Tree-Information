@@ -12,7 +12,7 @@ const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundEnabled] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [showQuickReplies, setShowQuickReplies] = useState(true);
@@ -358,12 +358,6 @@ const Chatbot = () => {
                 </span>
               </button>
 
-              <button
-                onClick={() => setSoundEnabled(!soundEnabled)}
-                className="text-white/50 hover:text-white hover:bg-white/10 p-2 rounded-full transition-all"
-              >
-                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-              </button>
               <button
                 onClick={() => setIsOpen(false)}
                 className="text-white/50 hover:text-white hover:bg-white/15 p-2 rounded-full transition-all"
