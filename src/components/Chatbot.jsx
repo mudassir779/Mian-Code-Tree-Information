@@ -335,28 +335,44 @@ const Chatbot = () => {
             </div>
 
             <div className="flex items-center gap-2 z-10">
-              <button
-                onClick={toggleCall}
-                disabled={isConnecting}
-                className={`relative px-4 py-2.5 rounded-full text-[12px] font-bold tracking-wide flex items-center gap-2 transition-all duration-300 overflow-hidden ${
-                  isConnecting
-                    ? 'bg-yellow-500 text-white cursor-wait'
-                    : isCallActive
-                      ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-xl shadow-red-500/40 hover:scale-105'
-                      : 'bg-gradient-to-r from-emerald-500 to-green-500 text-white cb-glow-call hover:scale-105'
-                }`}
-              >
-                {showRipple && <span className="absolute inset-0 rounded-full bg-white/30 animate-ping"></span>}
-                {isCallActive && <span className="absolute inset-0 rounded-full bg-red-300/40 animate-pulse"></span>}
-                <span className="relative z-10 flex items-center gap-2">
-                  {isConnecting ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <Phone size={15} className={isCallActive ? 'animate-pulse' : ''} />
-                  )}
-                  {isConnecting ? 'Connecting...' : isCallActive ? 'End Call' : 'Voice Call'}
-                </span>
-              </button>
+              {!isCallActive && !isConnecting && (
+                <button
+                  onClick={toggleCall}
+                  className="relative px-4 py-2.5 rounded-full text-[12px] font-bold tracking-wide flex items-center gap-2 transition-all duration-300 overflow-hidden bg-gradient-to-r from-emerald-500 to-green-500 text-white cb-glow-call hover:scale-105"
+                >
+                  {showRipple && <span className="absolute inset-0 rounded-full bg-white/30 animate-ping"></span>}
+                  <span className="relative z-10 flex items-center gap-2">
+                    <Phone size={15} />
+                    Voice Call
+                  </span>
+                </button>
+              )}
+
+              {isConnecting && (
+                <button
+                  disabled
+                  className="relative px-4 py-2.5 rounded-full text-[12px] font-bold tracking-wide flex items-center gap-2 bg-yellow-500 text-white cursor-wait"
+                >
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Connecting...
+                </button>
+              )}
+
+              {isCallActive && (
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-2 rounded-full text-[11px] font-bold bg-green-500/20 text-green-300 flex items-center gap-1.5 border border-green-400/30">
+                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                    Live Call
+                  </span>
+                  <button
+                    onClick={toggleCall}
+                    className="px-4 py-2.5 rounded-full text-[12px] font-bold flex items-center gap-2 bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg shadow-red-500/40 hover:scale-105 transition-all"
+                  >
+                    <Phone size={15} />
+                    End Call
+                  </button>
+                </div>
+              )}
 
               <button
                 onClick={() => setIsOpen(false)}
