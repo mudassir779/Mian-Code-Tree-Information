@@ -1,13 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  MessageCircle, X, Send, Bot, User, TreePine, Sparkles,
-  Paperclip, MapPin, Phone, Star, Clock, Volume2, VolumeX,
-  Image as ImageIcon, Loader
+  X, Send, User, TreePine,
+  Paperclip, Phone, Volume2, VolumeX,
+  Image as ImageIcon, Loader, CalendarDays, AlertTriangle, DollarSign
 } from 'lucide-react';
 import Vapi from '@vapi-ai/web';
 import { sendTreeAnalysisEmail } from '../utils/emailService';
 
-// Sound effect for new messages (subtle pop)
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
 const Chatbot = () => {
@@ -20,7 +19,6 @@ const Chatbot = () => {
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Vapi State
   const [isCallActive, setIsCallActive] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [showRipple, setShowRipple] = useState(false);
@@ -29,15 +27,6 @@ const Chatbot = () => {
   const [showContactForm, setShowContactForm] = useState(false);
   const [contactForm, setContactForm] = useState({ name: '', email: '', phone: '' });
   const [isSendingEmail, setIsSendingEmail] = useState(false);
-
-  // Business Hours Logic
-  const isBusinessHours = () => {
-    const now = new Date();
-    const hour = now.getHours();
-    const day = now.getDay();
-    // Mon-Fri, 8am-6pm
-    return day >= 1 && day <= 5 && hour >= 8 && hour < 18;
-  };
 
   // Initialize Vapi
   useEffect(() => {
@@ -83,7 +72,6 @@ const Chatbot = () => {
 
   const toggleCall = () => {
     if (vapiRef.current) {
-      // Trigger ripple effect
       setShowRipple(true);
       setTimeout(() => setShowRipple(false), 600);
 
@@ -92,18 +80,16 @@ const Chatbot = () => {
       } else {
         setIsConnecting(true);
         vapiRef.current.start('1db96221-98c5-4ef3-a4c7-f60c999a4883');
-        // Remove connecting state after 2 seconds (or when call actually starts)
         setTimeout(() => setIsConnecting(false), 2000);
       }
     }
   };
 
-  // Initial Welcome Message
   useEffect(() => {
     setMessages([
       {
         id: 1,
-        text: "Hi👋 this is Abdias from American Tree Experts. How may I assist you today?",
+        text: "Hi there! \ud83d\udc4b I'm Abdias from American Tree Experts. Whether it's trimming, removal, or a health check \u2014 I'm here to help your trees thrive!",
         sender: 'bot',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
@@ -114,12 +100,10 @@ const Chatbot = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Auto-scroll on new message
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  // Play sound on new bot message
   useEffect(() => {
     if (messages.length > 0 && messages[messages.length - 1].sender === 'bot' && soundEnabled) {
       notificationSound.volume = 0.5;
@@ -127,123 +111,12 @@ const Chatbot = () => {
     }
   }, [messages, soundEnabled]);
 
-  // Tree service Q&A database - Comprehensive conversation flow
-  const qaDatabase = [
-    {
-      // General Greeting / Initial Call
-      keywords: ['hello', 'hi', 'hey', 'calling', 'leaning', 'worried', 'concern', 'help with a tree'],
-      response: "Thank you for calling. I understand your concern. We can definitely help with that. Could you tell me a little more about the tree and its location?"
-    },
-    {
-      // Specific Tree Details
-      keywords: ['species', 'tall', 'height', 'feet', 'branches', 'touching', 'wires', 'power lines'],
-      response: "Okay, we'll need to take a closer look at it to determine the best course of action. We may need to trim the branches or remove the entire tree. We also need to ensure that we're working safely around the power lines."
-    },
-    {
-      // Cost / Price
-      keywords: ['cost', 'price', 'charge', 'how much', 'estimate', 'rates'],
-      response: "We can give you a more accurate estimate once we've assessed the situation. However, for a job like this, we typically charge between $500-$2000 depending on the complexity and size of the tree."
-    },
-    {
-      // Insurance / Certification
-      keywords: ['insurance', 'insured', 'certified', 'arborist', 'license', 'staff'],
-      response: "Yes, we are fully insured and have certified arborists on staff who are trained and experienced in working with trees."
-    },
-    {
-      // Quote / Assessment Request
-      keywords: ['quote', 'assessment', 'come out', 'visit', 'inspect', 'comfortable'],
-      response: "Absolutely. We can schedule a time for you to come out and assess the situation. We'll also discuss all the details of the job with you and provide a written quote."
-    },
-    {
-      // Safety
-      keywords: ['safety', 'safe', 'protection', 'protect', 'damage', 'equipment', 'glasses', 'gloves', 'helmet'],
-      response: "We take safety very seriously. All our crews are trained in safety procedures, and we use the proper safety equipment, including helmets, safety glasses, and gloves. We also take precautions to protect your property by using drop cloths and ensuring that no debris damages your fences or landscaping."
-    },
-    {
-      // Liability / Damage Concerns
-      keywords: ['wrong', 'falls', 'house', 'damage', 'insurance policy', 'liability'],
-      response: "We understand your concerns. Our insurance policy covers any damage to your property during the work. We also have a policy of working with you throughout the entire process to ensure that you are comfortable with our work."
-    },
-    {
-      // Scheduling Finalization
-      keywords: ['book', 'schedule', 'appointment', 'address', 'time works'],
-      response: "Sounds good. We'll need to know your address and a time that works for you to assess the situation."
-    },
-    {
-      // "I need some trees serviced" - Initial Quote Request
-      keywords: ['need tree', 'service', 'yard', 'get a quote', 'serviced'],
-      response: "I'd be happy to help you get a quote! To provide you with an accurate estimate, I'll need some information:\n\n1. What type of service are you looking for?\n   • Tree trimming/pruning\n   • Tree removal\n   • Stump grinding/removal\n   • Emergency tree service\n   • Tree planting"
-    },
-    {
-      // Tree Information Gathering
-      keywords: ['number', 'type', 'oak', 'maple', 'pine', 'size', 'condition', 'diseased', 'healthy', 'location'],
-      response: "Great! Can you tell me about the tree(s) in question?\n\n• Number of trees: How many trees need attention?\n• Tree type: What kind of tree is it (e.g., Oak, Maple, Pine, Crepe Myrtle)?\n• Tree size: How tall is the tree?\n  - Small (up to 30 feet)\n  - Medium (30-60 feet)\n  - Large (over 60 feet)\n• Tree condition: Is the tree healthy, diseased, or damaged?\n• Location: Where is the tree located on your property? Is it near structures, power lines, fences, or other obstacles?"
-    },
-    {
-      // Specific Goals/Concerns
-      keywords: ['goal', 'dead', 'decaying', 'interfering', 'roof', 'shape', 'appearance', 'construction'],
-      response: "What are your specific concerns or goals for the tree service?\n\n• Are you concerned about dead or decaying branches that could fall?\n• Are branches interfering with power lines or your roof?\n• Are you looking to improve the tree's shape or appearance?\n• Are you planning a construction project that requires tree removal?"
-    },
-    {
-      // Timing
-      keywords: ['when', 'timeframe', 'soon', 'emergency', 'immediate', 'urgent'],
-      response: "When would you like the service to be performed?\n\n• Is this an emergency situation requiring immediate attention?\n• Do you have a preferred timeframe for the work?"
-    },
-    {
-      // Budget
-      keywords: ['budget', 'afford', 'range'],
-      response: "What is your budget for this service? While this can be discussed during negotiation, knowing your budget can help us tailor the quote to your needs."
-    },
-    {
-      // Quote Details
-      keywords: ['include', 'breakdown', 'timeline', 'payment', 'terms'],
-      response: "A complete tree service quote or estimate will include:\n\n• Company Name and Contact Information\n• Client's Name and Contact Information\n• Estimate Number and Job Name (for record-keeping)\n• Detailed Description of Services (e.g., trimming, removal, stump grinding)\n• Breakdown of Costs (including labor, materials, equipment rental, taxes, discounts)\n• Project Timeline (if applicable)\n• Payment Terms and Methods\n• Proof of Insurance and Licensing"
-    },
-    {
-      // Services Definitions
-      keywords: ['trimming', 'pruning', 'trim'],
-      response: "Tree trimming and pruning services help maintain the health and appearance of your trees. We can remove dead or overgrown branches, improve tree structure, and ensure safety around your property."
-    },
-    {
-      keywords: ['removal', 'remove', 'cut down'],
-      response: "Tree removal may be necessary for diseased, damaged, or hazardous trees. We safely remove trees of all sizes, ensuring no damage to your property or surrounding structures."
-    },
-    {
-      keywords: ['stump', 'grinding'],
-      response: "After tree removal, we offer stump grinding and removal services to completely clear the area. This prevents regrowth and allows you to use the space for landscaping or construction."
-    },
-    {
-      keywords: ['planting', 'plant'],
-      response: "We also provide tree planting services! We can help you select the right tree species for your property and ensure proper planting for healthy growth."
-    }
-  ];
-
-  const findBestResponse = (userInput) => {
-    const input = userInput.toLowerCase();
-    let bestMatch = null;
-    let maxMatches = 0;
-
-    for (const qa of qaDatabase) {
-      const matches = qa.keywords.reduce((count, keyword) => {
-        return count + (input.includes(keyword.toLowerCase()) ? 1 : 0);
-      }, 0);
-
-      if (matches > maxMatches) {
-        maxMatches = matches;
-        bestMatch = qa.response;
-      }
-    }
-
-    return bestMatch || "Thank you for your message. One of our tree care specialists will be with you shortly to answer your specific question. In the meantime, feel free to ask about our services, pricing, insurance, or schedule an assessment.";
-  };
-
   const handleSendMessage = async (e, overrideText = null) => {
     if (e) e.preventDefault();
     const textToSend = overrideText || inputText;
 
     if (!textToSend.trim()) return;
 
-    // Add user message
     const userMessage = {
       id: Date.now(),
       text: textToSend,
@@ -257,16 +130,10 @@ const Chatbot = () => {
     setIsTyping(true);
 
     try {
-      // Call Backend API
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: textToSend,
-          history: messages // Send history for context
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: textToSend, history: messages }),
       });
 
       const data = await response.json();
@@ -282,10 +149,8 @@ const Chatbot = () => {
       } else {
         throw new Error(data.error || 'Failed to get response');
       }
-
     } catch (error) {
       console.error('Error:', error);
-      // Fallback response if API fails
       const errorMessage = {
         id: Date.now() + 1,
         text: "I'm having trouble connecting to the server right now. Please call us at 812-457-3433 for immediate assistance.",
@@ -301,8 +166,6 @@ const Chatbot = () => {
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // In a real app, you would upload this to a server
-      // Here we'll just simulate sending an image
       const userMessage = {
         id: Date.now(),
         text: `Sent an image: ${file.name}`,
@@ -330,45 +193,33 @@ const Chatbot = () => {
     e.preventDefault();
     setIsSendingEmail(true);
 
-    // Simulate analysis based on previous messages (simplified)
-    const analysis = "Customer requested a quote via chatbot. Please review chat history for details.";
-
     const emailData = {
       name: contactForm.name,
       email: contactForm.email,
       phone: contactForm.phone,
-      analysis: analysis,
-      price: "$500 - $2000 (Estimate)", // You might want to make this dynamic
+      analysis: "Customer requested a quote via chatbot. Please review chat history for details.",
+      price: "$500 - $2000 (Estimate)",
       imageUrl: "Image available in chat"
     };
 
     const result = await sendTreeAnalysisEmail(emailData);
-
     setIsSendingEmail(false);
     setShowContactForm(false);
 
-    if (result.success) {
-      const botMessage = {
-        id: Date.now(),
-        text: "Thank you! Your request has been sent to our team. We will contact you shortly to schedule your assessment.",
-        sender: 'bot',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, botMessage]);
-    } else {
-      const botMessage = {
-        id: Date.now(),
-        text: "I apologize, but there was an issue sending your request. Please try again or call us directly.",
-        sender: 'bot',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, botMessage]);
-    }
+    const botMessage = {
+      id: Date.now(),
+      text: result.success
+        ? "Thank you! Your request has been sent to our team. We will contact you shortly to schedule your assessment."
+        : "I apologize, but there was an issue sending your request. Please try again or call us directly.",
+      sender: 'bot',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    setMessages(prev => [...prev, botMessage]);
     setContactForm({ name: '', email: '', phone: '' });
   };
 
   const handleQuickReply = (reply) => {
-    if (reply === "Request a Quote" || reply === "Schedule Service") {
+    if (reply === "Free Estimate" || reply === "Schedule Visit") {
       const botMessage = {
         id: Date.now(),
         text: "I can help with that! Please provide your contact details so we can reach you.",
@@ -382,231 +233,182 @@ const Chatbot = () => {
     }
   };
 
-  const quickReplies = [
-    "Request a Quote",
-    "Schedule Service",
-    "Emergency Tree Removal",
-    "Tree Health Assessment"
+  const serviceCards = [
+    { label: "Free Estimate", icon: <TreePine size={18} className="text-green-700" />, bg: "bg-green-50", border: "border-green-200" },
+    { label: "Schedule Visit", icon: <CalendarDays size={18} className="text-amber-600" />, bg: "bg-amber-50", border: "border-amber-200" },
+    { label: "Emergency", icon: <AlertTriangle size={18} className="text-red-500" />, bg: "bg-red-50", border: "border-red-200" },
+    { label: "Pricing", icon: <DollarSign size={18} className="text-blue-600" />, bg: "bg-blue-50", border: "border-blue-200" },
   ];
 
   return (
     <div className="fixed bottom-6 right-6 z-50 font-sans">
       <style>{`
-        @keyframes float {
+        @keyframes cb-slideUp {
+          from { opacity: 0; transform: translateY(16px) scale(0.96); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes cb-float {
           0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-5px); }
+          50% { transform: translateY(-4px); }
         }
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse-ring {
-          0% { transform: scale(0.8); opacity: 0.5; }
-          100% { transform: scale(2); opacity: 0; }
-        }
-        @keyframes ripple {
-          0% { transform: scale(0); opacity: 1; }
-          100% { transform: scale(2.5); opacity: 0; }
-        }
-        @keyframes shake {
-          0%, 100% { transform: rotate(0deg); }
-          25% { transform: rotate(-10deg); }
-          75% { transform: rotate(10deg); }
-        }
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
-        }
-        @keyframes glow-pulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
-          50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
-        }
-        @keyframes spin {
-          from { transform: rotate(0deg); }
+        @keyframes cb-spinRing {
           to { transform: rotate(360deg); }
         }
-        .animate-float { animation: float 3s ease-in-out infinite; }
-        .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
-        .animate-ripple { animation: ripple 0.6s ease-out; }
-        .animate-shake { animation: shake 0.5s ease-in-out; }
-        .animate-bounce { animation: bounce 0.6s ease-in-out infinite; }
-        .animate-glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
-        .animate-spin { animation: spin 1s linear infinite; }
-        .glass-panel {
-          background: rgba(255, 255, 255, 0.98);
-          backdrop-filter: blur(12px);
+        @keyframes cb-pulseDot {
+          0%, 100% { box-shadow: 0 0 6px rgba(74,222,128,0.5); }
+          50% { box-shadow: 0 0 14px rgba(74,222,128,0.9); }
         }
-        .pattern-grid {
-          background-image: radial-gradient(#166534 0.5px, transparent 0.5px);
-          background-size: 10px 10px;
-          opacity: 0.03;
+        @keyframes cb-typingBounce {
+          0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+          30% { transform: translateY(-5px); opacity: 1; }
         }
-        /* Custom Scrollbar */
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #94a3b8; }
-        
-        .typing-dot {
-          animation: typing 1.4s infinite ease-in-out both;
+        @keyframes cb-floatPulse {
+          0%, 100% { transform: scale(1); opacity: 0.25; }
+          50% { transform: scale(1.2); opacity: 0; }
         }
-        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-        
-        @keyframes typing {
-          0%, 80%, 100% { transform: scale(0); }
-          40% { transform: scale(1); }
+        @keyframes cb-glowCall {
+          0%, 100% { box-shadow: 0 4px 16px rgba(16,185,129,0.35); }
+          50% { box-shadow: 0 4px 24px rgba(16,185,129,0.6); }
         }
+        .cb-open { animation: cb-slideUp 0.35s ease-out forwards; }
+        .cb-float { animation: cb-float 3s ease-in-out infinite; }
+        .cb-ring::before {
+          content: '';
+          position: absolute;
+          inset: -3px;
+          border-radius: 50%;
+          background: conic-gradient(from 0deg, #4ade80, #22c55e, #15803d, #166534, #4ade80);
+          animation: cb-spinRing 8s linear infinite;
+          z-index: 0;
+        }
+        .cb-dot-pulse { animation: cb-pulseDot 2s ease-in-out infinite; }
+        .cb-typing-dot { animation: cb-typingBounce 1.4s ease-in-out infinite; }
+        .cb-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .cb-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        .cb-float-pulse { animation: cb-floatPulse 2s ease-in-out infinite; }
+        .cb-glow-call { animation: cb-glowCall 2s ease-in-out infinite; }
+        .cb-scroll::-webkit-scrollbar { width: 5px; }
+        .cb-scroll::-webkit-scrollbar-track { background: transparent; }
+        .cb-scroll::-webkit-scrollbar-thumb { background: #bbf7d0; border-radius: 10px; }
+        .cb-scroll::-webkit-scrollbar-thumb:hover { background: #86efac; }
+        .cb-svc-cards { -ms-overflow-style: none; scrollbar-width: none; }
+        .cb-svc-cards::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* Chat Button */}
+      {/* ===== FLOAT BUTTON ===== */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="group relative bg-gradient-to-br from-lime-600 to-green-800 text-white p-4 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 border-[3px] border-lime-200/30"
+          className="group relative w-16 h-16 rounded-full bg-gradient-to-br from-green-800 via-green-700 to-green-600 text-white shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 flex items-center justify-center"
           aria-label="Open chat"
         >
-          <div className="absolute inset-0 rounded-full bg-lime-300/30 blur-md group-hover:blur-lg transition-all"></div>
-          <div className="relative flex items-center justify-center">
-            <Bot size={32} className="animate-float drop-shadow-md" />
-            <span className="absolute -top-1 -right-1 flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-lime-500"></span>
-            </span>
-          </div>
+          <span className="absolute inset-[-6px] rounded-full bg-green-400/20 cb-float-pulse"></span>
+          <span className="absolute inset-[-3px] rounded-full bg-gradient-to-br from-green-400/30 to-green-600/30 blur-sm"></span>
+          <span className="relative text-3xl cb-float drop-shadow-md">🌲</span>
+          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-md">1</span>
         </button>
       )}
 
-      {/* Chat Window */}
+      {/* ===== CHAT WINDOW ===== */}
       {isOpen && (
-        <div className="glass-panel rounded-3xl shadow-2xl w-[350px] sm:w-[400px] flex flex-col overflow-hidden border border-white/40 ring-1 ring-black/5 transition-all duration-300 animate-fade-in-up" style={{ height: '600px', maxHeight: '85vh' }}>
+        <div className="cb-open rounded-[28px] shadow-2xl w-[370px] sm:w-[400px] flex flex-col overflow-hidden ring-1 ring-black/5 bg-[#f8faf5]" style={{ height: '620px', maxHeight: '88vh' }}>
 
-          {/* Header */}
-          <div className="bg-gradient-to-r from-lime-700 via-green-700 to-green-800 p-4 flex justify-between items-center text-white relative overflow-hidden shrink-0 shadow-md">
-            {/* Decorative elements */}
-            <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-lime-400/20 rounded-full blur-2xl"></div>
+          {/* ===== HEADER ===== */}
+          <div className="bg-gradient-to-br from-[#1a3a1a] via-[#2d5a27] to-[#1e4d1e] px-5 py-4 flex justify-between items-center relative overflow-hidden shrink-0">
+            <div className="absolute inset-0 opacity-[0.04]" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 C35 15 45 20 40 30 C35 40 25 35 20 40' stroke='white' fill='none' stroke-width='1'/%3E%3C/svg%3E")`, backgroundSize: '40px 40px'}}></div>
+            <div className="absolute top-[-30px] right-[-20px] w-[120px] h-[120px] bg-green-400/10 rounded-full blur-2xl"></div>
 
-            <div className="flex items-center gap-3 relative z-10">
-              <div className="relative">
-                <div className="w-12 h-12 rounded-full border-2 border-white/30 overflow-hidden shadow-lg bg-lime-100 flex items-center justify-center">
-                  <Bot size={28} className="text-lime-700" />
+            <div className="flex items-center gap-3.5 z-10">
+              <div className="cb-ring relative w-[52px] h-[52px] flex items-center justify-center">
+                <div className="relative w-[52px] h-[52px] rounded-full bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center border-[3px] border-[#1a3a1a] z-[1]">
+                  <span className="text-[26px] drop-shadow-md">🌲</span>
                 </div>
-                <span className={`absolute bottom-0 right-0 w-3.5 h-3.5 border-2 border-green-800 rounded-full ${isBusinessHours() ? 'bg-green-400' : 'bg-gray-400'}`}></span>
+                <span className="absolute bottom-[2px] right-[2px] w-3 h-3 rounded-full bg-green-400 border-[2.5px] border-[#1a3a1a] z-[2] cb-dot-pulse"></span>
               </div>
               <div>
-                <h3 className="font-bold text-lg tracking-wide leading-tight text-white drop-shadow-sm">Abdias</h3>
-                <p className="text-xs text-lime-100/90 flex items-center gap-1">
-                  Tree Specialist
+                <h3 className="font-extrabold text-[17px] text-white tracking-wide drop-shadow-md">Abdias</h3>
+                <p className="text-[11.5px] text-green-300 font-medium flex items-center gap-1.5 mt-0.5">
+                  <span className="text-[10px]">🌿</span>
+                  Tree Specialist &bull; Online
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 relative z-10">
-              {/* Premium Voice Call Button with All Effects */}
+            <div className="flex items-center gap-2 z-10">
               <button
                 onClick={toggleCall}
                 disabled={isConnecting}
-                className={`group relative px-4 py-2 rounded-full transition-all duration-300 transform overflow-hidden ${isConnecting
-                    ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg shadow-yellow-500/50 cursor-wait'
+                className={`relative px-4 py-2.5 rounded-full text-[12px] font-bold tracking-wide flex items-center gap-2 transition-all duration-300 overflow-hidden ${
+                  isConnecting
+                    ? 'bg-yellow-500 text-white cursor-wait'
                     : isCallActive
-                      ? 'bg-gradient-to-r from-red-500 via-red-600 to-pink-600 text-white shadow-xl shadow-red-500/60 hover:shadow-2xl hover:shadow-red-500/70 hover:scale-110 active:scale-95'
-                      : 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/50 hover:shadow-2xl hover:shadow-blue-600/70 hover:scale-110 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 active:scale-95 animate-glow-pulse'
-                  } disabled:opacity-70 disabled:cursor-not-allowed`}
-                title={isConnecting ? "Connecting..." : isCallActive ? "End Voice Call" : "Start Voice Call"}
+                      ? 'bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-xl shadow-red-500/40 hover:scale-105'
+                      : 'bg-gradient-to-r from-emerald-500 to-green-500 text-white cb-glow-call hover:scale-105'
+                }`}
               >
-                {/* Ripple Effect on Click */}
-                {showRipple && (
-                  <span className="absolute inset-0 rounded-full bg-white/30 animate-ripple"></span>
-                )}
-
-                {/* Pulse Ring Animation for Active Call */}
-                {isCallActive && (
-                  <>
-                    <span className="absolute inset-0 rounded-full animate-ping bg-red-400 opacity-75"></span>
-                    <span className="absolute inset-0 rounded-full animate-pulse bg-red-300 opacity-50"></span>
-                  </>
-                )}
-
-                {/* Attention Pulse for Idle State */}
-                {!isCallActive && !isConnecting && (
-                  <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-blue-400 to-indigo-400 opacity-20 blur-sm animate-pulse"></span>
-                )}
-
-                <div className="relative flex items-center gap-2 z-10">
-                  {/* Loading Spinner */}
+                {showRipple && <span className="absolute inset-0 rounded-full bg-white/30 animate-ping"></span>}
+                {isCallActive && <span className="absolute inset-0 rounded-full bg-red-300/40 animate-pulse"></span>}
+                <span className="relative z-10 flex items-center gap-2">
                   {isConnecting ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
-                    <Phone
-                      size={18}
-                      className={`${isCallActive
-                          ? 'animate-shake fill-current'
-                          : 'group-hover:animate-bounce'
-                        } transition-all duration-300 drop-shadow-lg`}
-                    />
+                    <Phone size={15} className={isCallActive ? 'animate-pulse' : ''} />
                   )}
-
-                  <span className="text-xs font-bold tracking-wide uppercase drop-shadow-md">
-                    {isConnecting ? 'Connecting...' : isCallActive ? 'End Call' : 'Voice Call'}
-                  </span>
-                </div>
-
-                {/* Enhanced Glow Effect */}
-                <div className={`absolute inset-0 rounded-full blur-lg transition-all duration-300 ${isConnecting
-                    ? 'bg-yellow-400/50'
-                    : isCallActive
-                      ? 'bg-red-400/60 group-hover:bg-red-400/80'
-                      : 'bg-blue-400/40 group-hover:bg-blue-500/60'
-                  }`}></div>
-
-                {/* Gradient Border Glow */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  {isConnecting ? 'Connecting...' : isCallActive ? 'End Call' : 'Voice Call'}
+                </span>
               </button>
 
               <button
                 onClick={() => setSoundEnabled(!soundEnabled)}
-                className="text-white/70 hover:text-white hover:bg-white/10 p-2 rounded-full transition-all"
-                title={soundEnabled ? "Mute" : "Unmute"}
+                className="text-white/50 hover:text-white hover:bg-white/10 p-2 rounded-full transition-all"
               >
-                {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+                {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-white/70 hover:text-white hover:bg-white/20 p-2 rounded-full transition-all duration-200"
+                className="text-white/50 hover:text-white hover:bg-white/15 p-2 rounded-full transition-all"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
           </div>
 
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 bg-slate-50/80 relative space-y-4 custom-scrollbar">
-            <div className="absolute inset-0 pattern-grid pointer-events-none"></div>
+          {/* ===== TREE BANNER ===== */}
+          <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-green-100 px-5 py-2.5 flex items-center gap-3 border-b border-green-200 shrink-0">
+            <span className="text-base">🌳</span>
+            <span className="text-[11.5px] text-green-800 font-semibold flex-1">Licensed, Trained & Insured since 1997</span>
+            <span className="bg-green-800 text-white px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider">5-STAR</span>
+          </div>
 
-            <div className="text-center text-xs text-gray-400 my-2 font-medium flex items-center justify-center gap-2">
-              <span className="h-px w-12 bg-gray-200"></span>
+          {/* ===== MESSAGES ===== */}
+          <div className="flex-1 overflow-y-auto px-4 py-5 flex flex-col gap-4 bg-gradient-to-b from-green-50/60 via-[#fafff8] to-white relative cb-scroll">
+            <div className="absolute bottom-5 right-5 w-[180px] h-[180px] pointer-events-none opacity-[0.04]" style={{backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='100' cy='100' r='20' stroke='%2322c55e' stroke-width='1' fill='none'/%3E%3Ccircle cx='100' cy='100' r='45' stroke='%2322c55e' stroke-width='1' fill='none'/%3E%3Ccircle cx='100' cy='100' r='70' stroke='%2322c55e' stroke-width='1' fill='none'/%3E%3Ccircle cx='100' cy='100' r='95' stroke='%2322c55e' stroke-width='1' fill='none'/%3E%3C/svg%3E")`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat'}}></div>
+
+            {/* Day Divider */}
+            <div className="flex items-center gap-3 text-[11px] text-gray-400 font-medium">
+              <span className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></span>
               <span>Today</span>
-              <span className="h-px w-12 bg-gray-200"></span>
+              <span className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></span>
             </div>
 
             {messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex items-end gap-2.5 relative z-10 animate-slide-up ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex gap-2.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 {msg.sender === 'bot' && (
-                  <div className="w-8 h-8 rounded-full overflow-hidden border border-lime-200 flex-shrink-0 shadow-sm bg-lime-50 flex items-center justify-center">
-                    <Bot size={18} className="text-lime-700" />
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-100 to-green-200 border-[1.5px] border-green-300 flex items-center justify-center flex-shrink-0 shadow-sm self-end">
+                    <span className="text-sm">🌲</span>
                   </div>
                 )}
 
                 <div className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
                   <div
-                    className={`max-w-[280px] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${msg.sender === 'user'
-                      ? 'bg-gradient-to-br from-lime-600 to-green-700 text-white rounded-br-none shadow-lime-200'
-                      : 'bg-white text-gray-700 border border-gray-100 rounded-bl-none shadow-gray-100'
-                      }`}
+                    className={`max-w-[270px] px-4 py-3 text-[13.5px] leading-relaxed whitespace-pre-line ${
+                      msg.sender === 'user'
+                        ? 'bg-gradient-to-br from-green-800 to-green-700 text-white rounded-[20px] rounded-br-[6px] shadow-md shadow-green-800/20'
+                        : 'bg-white text-gray-800 rounded-[20px] rounded-bl-[6px] shadow-sm border border-gray-100/80'
+                    }`}
                   >
                     {msg.text}
                     {msg.isImage && (
@@ -616,28 +418,27 @@ const Chatbot = () => {
                       </div>
                     )}
                   </div>
-                  <span className="text-[10px] text-gray-400 mt-1 px-1">
-                    {msg.timestamp}
-                  </span>
+                  <span className="text-[10px] text-gray-400 mt-1 px-1.5">{msg.timestamp}</span>
                 </div>
 
                 {msg.sender === 'user' && (
-                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-gray-500 border border-gray-200 shadow-sm">
-                    <User size={16} />
+                  <div className="w-8 h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 shadow-sm self-end">
+                    <User size={15} className="text-gray-500" />
                   </div>
                 )}
               </div>
             ))}
 
+            {/* Typing Indicator */}
             {isTyping && (
-              <div className="flex items-end gap-2.5 animate-slide-up">
-                <div className="w-8 h-8 rounded-full overflow-hidden border border-lime-200 flex-shrink-0 shadow-sm bg-lime-50 flex items-center justify-center">
-                  <Bot size={18} className="text-lime-700" />
+              <div className="flex gap-2.5 justify-start">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-100 to-green-200 border-[1.5px] border-green-300 flex items-center justify-center flex-shrink-0 shadow-sm">
+                  <span className="text-sm">🌲</span>
                 </div>
-                <div className="bg-white p-4 rounded-2xl rounded-bl-none border border-gray-100 shadow-sm flex gap-1 items-center h-10">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full typing-dot"></div>
+                <div className="bg-white px-5 py-3.5 rounded-[20px] rounded-bl-[6px] border border-gray-100 shadow-sm flex gap-[6px] items-center">
+                  <div className="w-2 h-2 bg-green-400 rounded-full cb-typing-dot"></div>
+                  <div className="w-2 h-2 bg-green-400 rounded-full cb-typing-dot"></div>
+                  <div className="w-2 h-2 bg-green-400 rounded-full cb-typing-dot"></div>
                 </div>
               </div>
             )}
@@ -645,42 +446,44 @@ const Chatbot = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Contact Form Overlay */}
+          {/* ===== CONTACT FORM OVERLAY ===== */}
           {showContactForm && (
-            <div className="absolute inset-0 bg-white/95 z-30 flex flex-col justify-center p-6 animate-fade-in-up">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-lg text-green-800">Contact Details</h3>
-                <button onClick={() => setShowContactForm(false)} className="text-gray-400 hover:text-gray-600">
+            <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-30 flex flex-col justify-center p-7 rounded-[28px]">
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="font-bold text-lg text-green-800 flex items-center gap-2">
+                  <span>🌿</span> Contact Details
+                </h3>
+                <button onClick={() => setShowContactForm(false)} className="text-gray-400 hover:text-gray-600 p-1">
                   <X size={20} />
                 </button>
               </div>
               <form onSubmit={handleContactSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Name</label>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Name</label>
                   <input
                     type="text"
                     required
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 outline-none text-sm"
+                    className="w-full p-3 border-2 border-green-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none text-sm bg-green-50/50"
                     value={contactForm.name}
                     onChange={e => setContactForm({ ...contactForm, name: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Email</label>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Email</label>
                   <input
                     type="email"
                     required
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 outline-none text-sm"
+                    className="w-full p-3 border-2 border-green-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none text-sm bg-green-50/50"
                     value={contactForm.email}
                     onChange={e => setContactForm({ ...contactForm, email: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Phone</label>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Phone</label>
                   <input
                     type="tel"
                     required
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-lime-500 outline-none text-sm"
+                    className="w-full p-3 border-2 border-green-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none text-sm bg-green-50/50"
                     value={contactForm.phone}
                     onChange={e => setContactForm({ ...contactForm, phone: e.target.value })}
                   />
@@ -688,48 +491,43 @@ const Chatbot = () => {
                 <button
                   type="submit"
                   disabled={isSendingEmail}
-                  className="w-full bg-gradient-to-r from-lime-600 to-green-700 text-white p-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all disabled:opacity-70 flex justify-center items-center gap-2"
+                  className="w-full bg-gradient-to-r from-green-700 to-green-600 text-white p-3.5 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-70 flex justify-center items-center gap-2"
                 >
                   {isSendingEmail ? (
-                    <>
-                      <Loader size={18} className="animate-spin" />
-                      Sending...
-                    </>
+                    <><Loader size={18} className="animate-spin" /> Sending...</>
                   ) : (
-                    <>
-                      <Send size={18} />
-                      Submit Request
-                    </>
+                    <><Send size={18} /> Submit Request</>
                   )}
                 </button>
               </form>
             </div>
           )}
 
-          {/* Quick Replies */}
-          {showQuickReplies && !isTyping && messages.length < 3 && !showContactForm && (
-            <div className="px-4 py-2 bg-gray-50/50 flex gap-2 overflow-x-auto scrollbar-none">
-              {quickReplies.map((reply, index) => (
+          {/* ===== SERVICE CARDS ===== */}
+          {showQuickReplies && !isTyping && !showContactForm && (
+            <div className="px-4 py-2 flex gap-2 overflow-x-auto cb-svc-cards shrink-0 bg-white/60">
+              {serviceCards.map((svc, index) => (
                 <button
                   key={index}
-                  onClick={() => handleQuickReply(reply)}
-                  className="whitespace-nowrap px-3 py-1.5 bg-white border border-lime-200 text-lime-700 text-xs rounded-full hover:bg-lime-50 transition-colors shadow-sm"
+                  onClick={() => handleQuickReply(svc.label)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl border-[1.5px] ${svc.border} ${svc.bg} hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex-shrink-0`}
                 >
-                  {reply}
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-white shadow-sm">
+                    {svc.icon}
+                  </div>
+                  <span className="text-[12px] font-bold text-green-800 whitespace-nowrap">{svc.label}</span>
                 </button>
               ))}
             </div>
           )}
 
-          {/* Input Area */}
-          <form onSubmit={(e) => handleSendMessage(e)} className="p-4 bg-white border-t border-gray-100 relative z-20 shrink-0">
-            <div className="flex gap-2 items-center bg-gray-50 border border-gray-200 rounded-full px-2 py-2 focus-within:ring-2 focus-within:ring-lime-500/20 focus-within:border-lime-500 outline-none transition-all shadow-inner">
-
+          {/* ===== INPUT ===== */}
+          <form onSubmit={(e) => handleSendMessage(e)} className="px-4 py-3.5 bg-white border-t border-gray-100 shrink-0">
+            <div className="flex gap-2 items-center bg-green-50 border-2 border-green-200 rounded-full px-2 py-1 focus-within:border-green-500 focus-within:shadow-[0_0_0_4px_rgba(34,197,94,0.1)] transition-all">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2 text-gray-400 hover:text-lime-600 transition-colors rounded-full hover:bg-gray-100"
-                title="Attach file"
+                className="p-2.5 text-gray-400 hover:text-green-700 transition-colors rounded-full hover:bg-green-100/50"
               >
                 <Paperclip size={18} />
               </button>
@@ -740,40 +538,40 @@ const Chatbot = () => {
                 accept="image/*"
                 onChange={handleFileUpload}
               />
-
               <input
                 type="text"
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 bg-transparent px-2 text-sm focus:outline-none text-gray-700 placeholder:text-gray-400"
+                placeholder="Ask about tree services..."
+                className="flex-1 bg-transparent px-1 text-[13.5px] focus:outline-none text-gray-800 placeholder:text-gray-400 font-medium"
               />
-
               <button
                 type="submit"
                 disabled={!inputText.trim()}
-                className="bg-gradient-to-r from-lime-600 to-green-700 hover:from-lime-700 hover:to-green-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white p-2 rounded-full transition-all shadow-md transform active:scale-95 flex items-center justify-center"
+                className="w-11 h-11 rounded-full bg-gradient-to-br from-green-800 to-green-600 hover:from-green-900 hover:to-green-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white transition-all shadow-lg shadow-green-800/25 transform active:scale-90 flex items-center justify-center flex-shrink-0"
               >
-                <Send size={16} className={inputText.trim() ? 'ml-0.5' : ''} />
+                <Send size={16} />
               </button>
             </div>
-
-            <div className="text-center mt-2.5 flex justify-between items-center px-2">
-              <div className="flex flex-col items-start">
-                <p className="text-[10px] text-gray-500 font-bold tracking-wide uppercase">Call for more information</p>
-                <a href="tel:812-457-3433" className="text-sm font-black text-gray-900 flex items-center gap-1 hover:text-lime-700 transition-colors">
-                  <Phone size={14} className="text-green-600 fill-green-600" />
-                  812-457-3433
-                </a>
-              </div>
-              <p className="text-[10px] text-gray-400 flex items-center gap-1.5 font-medium">
-                <span className="flex items-center gap-0.5 text-lime-700/80">
-                  <TreePine size={10} />
-                  <span className="tracking-tight">American Tree Experts</span>
-                </span>
-              </p>
-            </div>
           </form>
+
+          {/* ===== FOOTER ===== */}
+          <div className="px-5 py-3 bg-gradient-to-r from-green-50 to-emerald-50 border-t border-green-100 flex justify-between items-center shrink-0">
+            <div>
+              <p className="text-[9px] text-gray-500 font-semibold tracking-[1.2px] uppercase">Call for more info</p>
+              <a href="tel:812-457-3433" className="text-[14px] font-extrabold text-green-800 flex items-center gap-1.5 hover:text-green-700 transition-colors mt-0.5">
+                <span className="w-6 h-6 rounded-full bg-green-800 text-white flex items-center justify-center shadow-md shadow-green-800/25">
+                  <Phone size={12} />
+                </span>
+                812-457-3433
+              </a>
+            </div>
+            <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-semibold">
+              <span className="text-base">🌲</span>
+              American Tree Experts
+            </div>
+          </div>
+
         </div>
       )}
     </div>
