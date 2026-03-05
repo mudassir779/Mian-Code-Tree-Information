@@ -8,4 +8,4 @@ cmds = ["npm install --include=dev"]
 cmds = ["npm run build"]
 
 [start]
-cmd = "exec caddy run --config /assets/Caddyfile --adapter caddyfile 2>&1"
+cmd = "npm start"
