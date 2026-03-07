@@ -75,6 +75,34 @@ const faqResponses = [
     keywords: ['thank', 'thanks', 'appreciate'],
     response: "You're welcome! If you have any more questions, feel free to ask. You can also call us anytime at 812-457-3433. We look forward to helping you! 🌳"
   },
+  {
+    keywords: ['size', 'how tall', 'big tree', 'small tree', 'large tree', 'medium tree', 'feet', 'height'],
+    response: "Tree size plays a big role in determining the service approach and cost:\n\n🌱 Small trees (up to 30 ft): Easier to manage, lower cost\n🌳 Medium trees (30-60 ft): May need specialized equipment\n🌲 Large trees (over 60 ft): Require crane or advanced rigging\n\nTell us about your tree and we'll recommend the best approach. A free on-site assessment gives the most accurate estimate!"
+  },
+  {
+    keywords: ['dead branch', 'decaying', 'falling branch', 'broken branch', 'hanging branch', 'dead limb', 'rotting'],
+    response: "Dead or decaying branches are a serious safety hazard — they can fall unexpectedly and damage property or injure someone. We recommend having them removed as soon as possible. Our arborists can assess the situation and safely remove any dangerous branches. Call us at 812-457-3433 for quick scheduling!"
+  },
+  {
+    keywords: ['construction', 'building', 'renovation', 'land clearing', 'clear lot', 'new build'],
+    response: "Planning a construction project? We provide tree removal and land clearing services to prepare your site. We can selectively remove trees or clear entire lots depending on your project needs. We work with contractors and homeowners alike. Would you like a free site assessment?"
+  },
+  {
+    keywords: ['payment', 'pay', 'cash', 'credit card', 'check', 'finance', 'how to pay', 'payment method', 'payment plan'],
+    response: "We accept multiple payment methods for your convenience including cash, checks, and major credit cards. Payment terms are discussed when we provide your written quote. For larger projects, we can discuss payment arrangements. Feel free to ask about specifics when we visit for your free estimate!"
+  },
+  {
+    keywords: ['written quote', 'written estimate', 'formal quote', 'detailed quote', 'paperwork', 'contract', 'agreement'],
+    response: "Absolutely! After our free on-site assessment, we provide a detailed written quote that includes:\n\n📋 Description of services\n💰 Breakdown of costs\n📅 Estimated timeline\n📄 Proof of insurance & licensing\n\nNo hidden fees — everything is transparent. Would you like to schedule an assessment?"
+  },
+  {
+    keywords: ['property damage', 'protect my property', 'fence', 'landscaping', 'yard damage', 'lawn', 'driveway', 'roof damage'],
+    response: "We take extra care to protect your property during all our work. Our crews use drop cloths, careful rigging techniques, and controlled cutting methods to prevent damage to your fences, landscaping, driveway, and structures. We also do a thorough cleanup after every job. Your property will look great when we're done!"
+  },
+  {
+    keywords: ['fall on house', 'fall on my', 'what if', 'goes wrong', 'accident', 'liability', 'damage my house', 'damage my property'],
+    response: "We understand that concern completely. Rest assured — we are fully insured with comprehensive liability coverage. If anything were to happen during our work, our insurance policy covers any damage to your property. We also plan every job carefully to minimize risks, using controlled cutting and rigging techniques. Your safety and property are our top priority!"
+  },
 ];
 
 const getLocalResponse = (message) => {
