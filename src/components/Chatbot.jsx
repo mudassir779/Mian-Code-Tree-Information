@@ -89,7 +89,7 @@ const Chatbot = () => {
     setMessages([
       {
         id: 1,
-        text: "Hi there! \ud83d\udc4b I'm Abdias from American Tree Experts. Whether it's trimming, removal, or a health check \u2014 I'm here to help your trees thrive!",
+        text: "Hi there! \ud83d\udc4b I'm Abdias from American Tree Experts.",
         sender: 'bot',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
