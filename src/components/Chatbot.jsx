@@ -9,6 +9,97 @@ import { sendTreeAnalysisEmail } from '../utils/emailService';
 
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
+// FAQ Knowledge Base - Local responses (no API needed)
+const faqResponses = [
+  {
+    keywords: ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'],
+    response: "Hello! Welcome to American Tree Experts. How can I help you today? I can assist with tree trimming, removal, stump grinding, emergency services, or provide a free estimate."
+  },
+  {
+    keywords: ['trim', 'trimming', 'prune', 'pruning', 'cut branches', 'shape'],
+    response: "We offer professional tree trimming and pruning services! Our certified arborists can help improve your tree's health, shape, and appearance. Pricing depends on the tree size and complexity. Would you like to schedule a free on-site assessment?"
+  },
+  {
+    keywords: ['remove', 'removal', 'take down', 'cut down', 'fell'],
+    response: "We provide safe and efficient tree removal services. Whether it's a hazardous tree, storm damage, or a construction project — we handle it all. The cost depends on tree size, location, and complexity. We'd love to come out and give you a free estimate!"
+  },
+  {
+    keywords: ['stump', 'stump grinding', 'stump removal', 'grind'],
+    response: "Yes, we offer stump grinding and removal services! After a tree is removed, we can grind the stump below ground level so you can reclaim your yard. Pricing varies based on stump size. Want us to come take a look?"
+  },
+  {
+    keywords: ['emergency', 'urgent', 'storm', 'fallen', 'dangerous', 'power line', 'leaning'],
+    response: "We understand emergencies can't wait! We offer 24/7 emergency tree services for storm damage, fallen trees, and hazardous situations like trees near power lines. Please call us immediately at 812-457-3433 for emergency assistance. Safety is our top priority!"
+  },
+  {
+    keywords: ['price', 'pricing', 'cost', 'how much', 'charge', 'rate', 'estimate', 'quote', 'expensive', 'affordable', 'budget'],
+    response: "Our pricing depends on the type of service, tree size, location, and complexity. Here are general ranges:\n\n🌿 Tree Trimming: $200 - $800\n🪓 Tree Removal: $500 - $2,000+\n🪵 Stump Grinding: $150 - $500\n\nFor an accurate quote, we offer FREE on-site assessments. Would you like to schedule one?"
+  },
+  {
+    keywords: ['insurance', 'insured', 'liability', 'damage', 'covered', 'coverage'],
+    response: "Yes, we are fully insured! We carry both liability insurance and workers' compensation. If any damage occurs during our work, our insurance policy covers it. Your property is protected when you work with American Tree Experts."
+  },
+  {
+    keywords: ['certified', 'arborist', 'license', 'licensed', 'qualification', 'trained', 'experience'],
+    response: "Absolutely! We've been in business since 1997 and have certified arborists on staff who are trained and experienced in all aspects of tree care. Our team follows industry best practices and safety standards."
+  },
+  {
+    keywords: ['safety', 'safe', 'precaution', 'protect', 'protection', 'equipment'],
+    response: "Safety is our #1 priority! All our crews are trained in safety procedures and use proper equipment including helmets, safety glasses, and gloves. We also protect your property using drop cloths and ensure no debris damages your fences, landscaping, or structures."
+  },
+  {
+    keywords: ['schedule', 'appointment', 'book', 'visit', 'come out', 'when', 'available', 'availability'],
+    response: "We'd be happy to schedule a visit! We offer free on-site assessments. Please share your name, phone number, and preferred time, or call us at 812-457-3433 to book an appointment. We'll work around your schedule!"
+  },
+  {
+    keywords: ['service area', 'location', 'where', 'area', 'evansville', 'indiana'],
+    response: "We're based in Evansville, IN and serve the surrounding areas. We cover a wide service area in the tri-state region. Call us at 812-457-3433 to confirm if we service your location!"
+  },
+  {
+    keywords: ['health', 'disease', 'sick', 'dying', 'dead', 'assessment', 'check', 'inspect'],
+    response: "Our certified arborists can assess your tree's health and diagnose any diseases or issues. We provide tree health assessments, disease treatment, and preventive care recommendations. Would you like to schedule an inspection?"
+  },
+  {
+    keywords: ['what service', 'what do you', 'services', 'offer', 'provide', 'do you do'],
+    response: "We offer a full range of tree services:\n\n🌿 Tree Trimming & Pruning\n🪓 Tree Removal\n🪵 Stump Grinding & Removal\n🏥 Tree Health Assessments\n⚡ Emergency Tree Services (24/7)\n🌱 Tree Planting\n\nAll performed by certified, insured professionals. How can we help you today?"
+  },
+  {
+    keywords: ['phone', 'call', 'contact', 'reach', 'number', 'talk'],
+    response: "You can reach us at 812-457-3433 or email us at Thetreexperts@gmail.com. We're located in Evansville, IN. We'd love to hear from you!"
+  },
+  {
+    keywords: ['plant', 'planting', 'new tree', 'grow'],
+    response: "Yes, we offer tree planting services! Our arborists can help you choose the right tree species for your property and ensure it's planted properly for healthy growth. Would you like a consultation?"
+  },
+  {
+    keywords: ['thank', 'thanks', 'appreciate'],
+    response: "You're welcome! If you have any more questions, feel free to ask. You can also call us anytime at 812-457-3433. We look forward to helping you! 🌳"
+  },
+];
+
+const getLocalResponse = (message) => {
+  const lower = message.toLowerCase();
+  let bestMatch = null;
+  let bestScore = 0;
+
+  for (const faq of faqResponses) {
+    let score = 0;
+    for (const keyword of faq.keywords) {
+      if (lower.includes(keyword)) {
+        score += keyword.split(' ').length;
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = faq;
+    }
+  }
+
+  if (bestMatch) return bestMatch.response;
+
+  return "Thank you for your question! For detailed assistance, I'd recommend speaking with our team directly. Please call us at 812-457-3433 or share your contact details and we'll reach out to you. We're here to help with all your tree service needs!";
+};
+
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -129,38 +220,20 @@ const Chatbot = () => {
     setShowQuickReplies(false);
     setIsTyping(true);
 
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: textToSend, history: messages }),
-      });
+    // Use local FAQ responses (no API needed)
+    const responseText = getLocalResponse(textToSend);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        const botMessage = {
-          id: Date.now() + 1,
-          text: data.response,
-          sender: 'bot',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-        setMessages(prev => [...prev, botMessage]);
-      } else {
-        throw new Error(data.error || 'Failed to get response');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      const errorMessage = {
+    // Simulate typing delay for natural feel
+    setTimeout(() => {
+      const botMessage = {
         id: Date.now() + 1,
-        text: "I'm having trouble connecting to the server right now. Please call us at 812-457-3433 for immediate assistance.",
+        text: responseText,
         sender: 'bot',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
+      setMessages(prev => [...prev, botMessage]);
       setIsTyping(false);
-    }
+    }, 800 + Math.random() * 700);
   };
 
   const handleFileUpload = (e) => {
@@ -227,6 +300,7 @@ const Chatbot = () => {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, botMessage]);
+      setShowQuickReplies(false);
       setShowContactForm(true);
     } else {
       handleSendMessage(null, reply);
