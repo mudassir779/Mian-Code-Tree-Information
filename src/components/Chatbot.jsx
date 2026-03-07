@@ -9,99 +9,157 @@ import { sendTreeAnalysisEmail } from '../utils/emailService';
 
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
-// FAQ Knowledge Base - Local responses (no API needed)
+// FAQ Knowledge Base - Local responses based on client's Q&A content
 const faqResponses = [
+  // --- Greetings ---
   {
     keywords: ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening'],
-    response: "Hello! Welcome to American Tree Experts. How can I help you today? I can assist with tree trimming, removal, stump grinding, emergency services, or provide a free estimate."
+    response: "Hello! Thank you for reaching out to American Tree Experts. How can I help you today? Whether you need tree trimming, removal, stump grinding, or an emergency service — I'm here to assist!"
   },
+  // --- Customer needs help with a tree ---
   {
-    keywords: ['trim', 'trimming', 'prune', 'pruning', 'cut branches', 'shape'],
-    response: "We offer professional tree trimming and pruning services! Our certified arborists can help improve your tree's health, shape, and appearance. Pricing depends on the tree size and complexity. Would you like to schedule a free on-site assessment?"
+    keywords: ['need help', 'help with a tree', 'tree on my property', 'worried', 'concerned about', 'problem with tree', 'issue with tree'],
+    response: "Thank you for reaching out. I understand your concern. We can definitely help with that. Could you tell me a little more about the tree and its location? For example — what kind of tree is it, how tall, and is it near any structures or power lines?"
   },
+  // --- Tree near power lines / leaning ---
   {
-    keywords: ['remove', 'removal', 'take down', 'cut down', 'fell'],
-    response: "We provide safe and efficient tree removal services. Whether it's a hazardous tree, storm damage, or a construction project — we handle it all. The cost depends on tree size, location, and complexity. We'd love to come out and give you a free estimate!"
+    keywords: ['power line', 'leaning', 'leaning over', 'touching wire', 'near wires', 'electrical', 'utility line'],
+    response: "That's a serious safety concern and we handle these situations regularly. We'll need to take a closer look to determine the best course of action — we may need to trim the branches or remove the entire tree. We ensure safe work practices around power lines. Would you like to schedule a free assessment?"
   },
+  // --- Tree species / details ---
+  {
+    keywords: ['oak', 'maple', 'pine', 'crepe myrtle', 'elm', 'ash', 'birch', 'willow', 'species', 'what kind', 'type of tree'],
+    response: "Thanks for that detail! Knowing the tree species helps us plan the right approach. Different trees have different wood densities, growth patterns, and removal considerations. We'll assess it on-site to determine the best and safest method. Would you like to schedule a free visit?"
+  },
+  // --- Tree size ---
+  {
+    keywords: ['size', 'how tall', 'big tree', 'small tree', 'large tree', 'medium tree', 'feet', 'height', '20 feet', '30 feet', '60 feet'],
+    response: "Tree size is an important factor in determining the approach and cost:\n\n🌱 Small trees (up to 30 ft): Easier to manage, lower cost\n🌳 Medium trees (30-60 ft): May need specialized equipment\n🌲 Large trees (over 60 ft): Require crane or advanced rigging\n\nWe'll need to take a closer look to give you the most accurate assessment. Want to schedule a free visit?"
+  },
+  // --- Pricing / Cost / How much ---
+  {
+    keywords: ['price', 'pricing', 'cost', 'how much', 'charge', 'rate', 'expensive', 'affordable', 'budget'],
+    response: "We can give you a more accurate estimate once we've assessed the situation on-site. However, here are typical ranges based on complexity and tree size:\n\n🌿 Tree Trimming: $200 - $800\n🪓 Tree Removal: $500 - $2,000+\n🪵 Stump Grinding: $150 - $500\n\nWe offer FREE on-site assessments with no obligation. Would you like to schedule one?"
+  },
+  // --- Free estimate / quote ---
+  {
+    keywords: ['estimate', 'quote', 'free estimate', 'give me a quote', 'come out', 'assessment'],
+    response: "Absolutely! We can schedule a time to come out and assess the situation. We'll discuss all the details of the job with you and provide a written quote — no obligation. Please share your address and a time that works for you, or call us at 812-457-3433!"
+  },
+  // --- Insurance ---
+  {
+    keywords: ['insurance', 'insured', 'covered', 'coverage', 'liability'],
+    response: "Yes, we are fully insured! We carry comprehensive liability insurance and workers' compensation. Our insurance policy covers any damage to your property during the work. We also work with you throughout the entire process to ensure you're comfortable with everything."
+  },
+  // --- Certified arborists ---
+  {
+    keywords: ['certified', 'arborist', 'license', 'licensed', 'qualification', 'trained', 'experience', 'credentials'],
+    response: "Yes! We have certified arborists on staff who are trained and experienced in working with all types of trees. We've been in business since 1997, and our team follows industry best practices and all required safety standards and certifications."
+  },
+  // --- Safety measures ---
+  {
+    keywords: ['safety', 'safe', 'precaution', 'safety measures', 'safety equipment', 'helmets', 'glasses'],
+    response: "We take safety very seriously. All our crews are trained in safety procedures, and we use proper safety equipment including helmets, safety glasses, and gloves. We also take precautions to protect your property by using drop cloths and ensuring that no debris damages your fences or landscaping."
+  },
+  // --- Property protection during work ---
+  {
+    keywords: ['protect my property', 'property during', 'fence', 'landscaping', 'yard damage', 'lawn', 'driveway', 'debris', 'cleanup', 'clean up', 'drop cloth'],
+    response: "We take extra precautions to protect your property. Our crews use drop cloths, careful rigging techniques, and controlled cutting methods to prevent any damage to your fences, landscaping, driveway, and structures. We also do a thorough cleanup after every job — your property will look great when we're done!"
+  },
+  // --- What if tree falls on house / something goes wrong ---
+  {
+    keywords: ['fall on house', 'fall on my', 'what if', 'goes wrong', 'something goes wrong', 'accident', 'damage my house', 'damage my property', 'what happens if'],
+    response: "We understand your concerns completely. Our insurance policy covers any damage to your property during the work. We also have a policy of working with you throughout the entire process to ensure that you are comfortable with our work. Every job is carefully planned to minimize risks using controlled cutting and rigging techniques."
+  },
+  // --- Schedule appointment ---
+  {
+    keywords: ['schedule', 'appointment', 'book', 'visit', 'when', 'available', 'availability', 'time', 'come out and give'],
+    response: "Sounds good! We'll need to know your address and a time that works for you. We can come out and assess the situation, discuss all the details, and provide a written quote. Please share your details or call us at 812-457-3433 to set it up!"
+  },
+  // --- Tree trimming / pruning ---
+  {
+    keywords: ['trim', 'trimming', 'prune', 'pruning', 'cut branches', 'shape', 'branches touching'],
+    response: "We offer professional tree trimming and pruning services! Our certified arborists can trim branches that are interfering with power lines, your roof, or just improve the tree's shape and health. Pricing depends on tree size and complexity. Would you like to schedule a free on-site assessment?"
+  },
+  // --- Tree removal ---
+  {
+    keywords: ['remove', 'removal', 'take down', 'cut down', 'fell', 'get rid of'],
+    response: "We provide safe and efficient tree removal services. Whether it's a hazardous tree, storm damage, or a construction project requiring tree removal — we handle it all. We may need to trim branches first or remove the entire tree depending on the situation. We'd love to come out and give you a free estimate!"
+  },
+  // --- Stump grinding ---
   {
     keywords: ['stump', 'stump grinding', 'stump removal', 'grind'],
     response: "Yes, we offer stump grinding and removal services! After a tree is removed, we can grind the stump below ground level so you can reclaim your yard. Pricing varies based on stump size. Want us to come take a look?"
   },
+  // --- Emergency services ---
   {
-    keywords: ['emergency', 'urgent', 'storm', 'fallen', 'dangerous', 'power line', 'leaning'],
-    response: "We understand emergencies can't wait! We offer 24/7 emergency tree services for storm damage, fallen trees, and hazardous situations like trees near power lines. Please call us immediately at 812-457-3433 for emergency assistance. Safety is our top priority!"
+    keywords: ['emergency', 'urgent', 'storm', 'fallen', 'dangerous', 'immediate', 'right away', 'asap'],
+    response: "We understand emergencies can't wait! We offer 24/7 emergency tree services for storm damage, fallen trees, and hazardous situations. If this is an emergency, please call us immediately at 812-457-3433 for the fastest response. Safety is our top priority!"
   },
+  // --- Tree health / disease ---
   {
-    keywords: ['price', 'pricing', 'cost', 'how much', 'charge', 'rate', 'estimate', 'quote', 'expensive', 'affordable', 'budget'],
-    response: "Our pricing depends on the type of service, tree size, location, and complexity. Here are general ranges:\n\n🌿 Tree Trimming: $200 - $800\n🪓 Tree Removal: $500 - $2,000+\n🪵 Stump Grinding: $150 - $500\n\nFor an accurate quote, we offer FREE on-site assessments. Would you like to schedule one?"
+    keywords: ['health', 'disease', 'sick', 'dying', 'dead tree', 'inspect', 'assessment', 'health check', 'condition', 'damaged', 'diseased'],
+    response: "Our certified arborists can assess your tree's health and diagnose diseases or damage. We provide tree health assessments, disease treatment, and preventive care recommendations. Is the tree healthy, diseased, or showing signs of damage? Let us know and we'll recommend the best approach!"
   },
+  // --- Dead / decaying branches ---
   {
-    keywords: ['insurance', 'insured', 'liability', 'damage', 'covered', 'coverage'],
-    response: "Yes, we are fully insured! We carry both liability insurance and workers' compensation. If any damage occurs during our work, our insurance policy covers it. Your property is protected when you work with American Tree Experts."
+    keywords: ['dead branch', 'decaying', 'falling branch', 'broken branch', 'hanging branch', 'dead limb', 'rotting', 'dead branches'],
+    response: "Dead or decaying branches are a serious safety hazard — they can fall unexpectedly and damage property or injure someone. We recommend having them removed as soon as possible. Are you concerned about specific branches that could fall? Our arborists can assess and safely remove them. Call us at 812-457-3433 for quick scheduling!"
   },
+  // --- All services overview ---
   {
-    keywords: ['certified', 'arborist', 'license', 'licensed', 'qualification', 'trained', 'experience'],
-    response: "Absolutely! We've been in business since 1997 and have certified arborists on staff who are trained and experienced in all aspects of tree care. Our team follows industry best practices and safety standards."
+    keywords: ['what service', 'what do you', 'services', 'offer', 'provide', 'do you do', 'what can you'],
+    response: "We offer a full range of professional tree services:\n\n🌿 Tree Trimming & Pruning\n🪓 Tree Removal\n🪵 Stump Grinding & Removal\n🏥 Tree Health Assessments\n⚡ Emergency Tree Services (24/7)\n🌱 Tree Planting\n\nAll performed by certified, insured professionals since 1997. What service are you looking for?"
   },
+  // --- Construction / land clearing ---
   {
-    keywords: ['safety', 'safe', 'precaution', 'protect', 'protection', 'equipment'],
-    response: "Safety is our #1 priority! All our crews are trained in safety procedures and use proper equipment including helmets, safety glasses, and gloves. We also protect your property using drop cloths and ensure no debris damages your fences, landscaping, or structures."
+    keywords: ['construction', 'building', 'renovation', 'land clearing', 'clear lot', 'new build', 'project'],
+    response: "Planning a construction project that requires tree removal? We provide tree removal and land clearing services to prepare your site. We can selectively remove trees or clear entire lots depending on your project needs. Would you like a free site assessment?"
   },
-  {
-    keywords: ['schedule', 'appointment', 'book', 'visit', 'come out', 'when', 'available', 'availability'],
-    response: "We'd be happy to schedule a visit! We offer free on-site assessments. Please share your name, phone number, and preferred time, or call us at 812-457-3433 to book an appointment. We'll work around your schedule!"
-  },
-  {
-    keywords: ['service area', 'location', 'where', 'area', 'evansville', 'indiana'],
-    response: "We're based in Evansville, IN and serve the surrounding areas. We cover a wide service area in the tri-state region. Call us at 812-457-3433 to confirm if we service your location!"
-  },
-  {
-    keywords: ['health', 'disease', 'sick', 'dying', 'dead', 'assessment', 'check', 'inspect'],
-    response: "Our certified arborists can assess your tree's health and diagnose any diseases or issues. We provide tree health assessments, disease treatment, and preventive care recommendations. Would you like to schedule an inspection?"
-  },
-  {
-    keywords: ['what service', 'what do you', 'services', 'offer', 'provide', 'do you do'],
-    response: "We offer a full range of tree services:\n\n🌿 Tree Trimming & Pruning\n🪓 Tree Removal\n🪵 Stump Grinding & Removal\n🏥 Tree Health Assessments\n⚡ Emergency Tree Services (24/7)\n🌱 Tree Planting\n\nAll performed by certified, insured professionals. How can we help you today?"
-  },
-  {
-    keywords: ['phone', 'call', 'contact', 'reach', 'number', 'talk'],
-    response: "You can reach us at 812-457-3433 or email us at Thetreexperts@gmail.com. We're located in Evansville, IN. We'd love to hear from you!"
-  },
-  {
-    keywords: ['plant', 'planting', 'new tree', 'grow'],
-    response: "Yes, we offer tree planting services! Our arborists can help you choose the right tree species for your property and ensure it's planted properly for healthy growth. Would you like a consultation?"
-  },
-  {
-    keywords: ['thank', 'thanks', 'appreciate'],
-    response: "You're welcome! If you have any more questions, feel free to ask. You can also call us anytime at 812-457-3433. We look forward to helping you! 🌳"
-  },
-  {
-    keywords: ['size', 'how tall', 'big tree', 'small tree', 'large tree', 'medium tree', 'feet', 'height'],
-    response: "Tree size plays a big role in determining the service approach and cost:\n\n🌱 Small trees (up to 30 ft): Easier to manage, lower cost\n🌳 Medium trees (30-60 ft): May need specialized equipment\n🌲 Large trees (over 60 ft): Require crane or advanced rigging\n\nTell us about your tree and we'll recommend the best approach. A free on-site assessment gives the most accurate estimate!"
-  },
-  {
-    keywords: ['dead branch', 'decaying', 'falling branch', 'broken branch', 'hanging branch', 'dead limb', 'rotting'],
-    response: "Dead or decaying branches are a serious safety hazard — they can fall unexpectedly and damage property or injure someone. We recommend having them removed as soon as possible. Our arborists can assess the situation and safely remove any dangerous branches. Call us at 812-457-3433 for quick scheduling!"
-  },
-  {
-    keywords: ['construction', 'building', 'renovation', 'land clearing', 'clear lot', 'new build'],
-    response: "Planning a construction project? We provide tree removal and land clearing services to prepare your site. We can selectively remove trees or clear entire lots depending on your project needs. We work with contractors and homeowners alike. Would you like a free site assessment?"
-  },
+  // --- Payment methods ---
   {
     keywords: ['payment', 'pay', 'cash', 'credit card', 'check', 'finance', 'how to pay', 'payment method', 'payment plan'],
-    response: "We accept multiple payment methods for your convenience including cash, checks, and major credit cards. Payment terms are discussed when we provide your written quote. For larger projects, we can discuss payment arrangements. Feel free to ask about specifics when we visit for your free estimate!"
+    response: "We accept multiple payment methods for your convenience including cash, checks, and major credit cards. Payment terms are discussed when we provide your written quote. For larger projects, we can discuss payment arrangements. Feel free to ask about specifics when we visit!"
   },
+  // --- Written quote / contract ---
   {
     keywords: ['written quote', 'written estimate', 'formal quote', 'detailed quote', 'paperwork', 'contract', 'agreement'],
-    response: "Absolutely! After our free on-site assessment, we provide a detailed written quote that includes:\n\n📋 Description of services\n💰 Breakdown of costs\n📅 Estimated timeline\n📄 Proof of insurance & licensing\n\nNo hidden fees — everything is transparent. Would you like to schedule an assessment?"
+    response: "After our free on-site assessment, we provide a detailed written quote that includes:\n\n📋 Detailed description of services\n💰 Breakdown of costs (labor, materials, equipment)\n📅 Project timeline\n💳 Payment terms and methods\n📄 Proof of insurance & licensing\n\nNo hidden fees — everything is transparent. Would you like to schedule an assessment?"
   },
+  // --- Contact info ---
   {
-    keywords: ['property damage', 'protect my property', 'fence', 'landscaping', 'yard damage', 'lawn', 'driveway', 'roof damage'],
-    response: "We take extra care to protect your property during all our work. Our crews use drop cloths, careful rigging techniques, and controlled cutting methods to prevent damage to your fences, landscaping, driveway, and structures. We also do a thorough cleanup after every job. Your property will look great when we're done!"
+    keywords: ['phone', 'call', 'contact', 'reach', 'number', 'talk', 'email'],
+    response: "You can reach us at:\n\n📞 Phone: 812-457-3433\n📧 Email: Thetreexperts@gmail.com\n📍 Location: Evansville, IN\n\nWe'd love to hear from you!"
   },
+  // --- Service area ---
   {
-    keywords: ['fall on house', 'fall on my', 'what if', 'goes wrong', 'accident', 'liability', 'damage my house', 'damage my property'],
-    response: "We understand that concern completely. Rest assured — we are fully insured with comprehensive liability coverage. If anything were to happen during our work, our insurance policy covers any damage to your property. We also plan every job carefully to minimize risks, using controlled cutting and rigging techniques. Your safety and property are our top priority!"
+    keywords: ['service area', 'location', 'where', 'area', 'evansville', 'indiana', 'do you serve'],
+    response: "We're based in Evansville, IN and serve the surrounding tri-state area. Call us at 812-457-3433 to confirm if we service your location!"
+  },
+  // --- Tree planting ---
+  {
+    keywords: ['plant', 'planting', 'new tree', 'grow'],
+    response: "Yes, we offer tree planting services! Our arborists can help you choose the right tree species for your property and soil conditions, and ensure it's planted properly for healthy long-term growth. Would you like a consultation?"
+  },
+  // --- Number of trees ---
+  {
+    keywords: ['how many', 'multiple tree', 'several tree', 'few tree', 'number of tree', 'more than one'],
+    response: "No problem! We handle jobs of all sizes — from a single tree to multiple trees on your property. The more details you can provide (number of trees, types, sizes, and locations), the more accurate our estimate will be. Would you like to schedule a free on-site assessment?"
+  },
+  // --- Branches on roof ---
+  {
+    keywords: ['roof', 'branches on roof', 'over my house', 'hanging over', 'touching my roof', 'above my house'],
+    response: "Branches hanging over or touching your roof can cause serious damage, especially during storms. We can safely trim those branches back to protect your home. Our crews are experienced in working near structures with precision. Would you like us to come take a look?"
+  },
+  // --- Comfortable / ready to proceed ---
+  {
+    keywords: ['comfortable', 'ready', 'let\'s do it', 'go ahead', 'proceed', 'sounds good', 'let\'s schedule', 'i\'m in', 'okay let\'s'],
+    response: "Sounds great! We'll need your address and a preferred time for us to come out and assess the situation. We'll discuss everything in detail and provide a written quote on the spot. Please share your details or call us at 812-457-3433!"
+  },
+  // --- Thank you ---
+  {
+    keywords: ['thank', 'thanks', 'appreciate'],
+    response: "You're welcome! If you have any more questions, feel free to ask. You can also call us anytime at 812-457-3433. We look forward to helping you with your tree service needs! 🌳"
   },
 ];
 
