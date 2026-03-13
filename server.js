@@ -24,8 +24,21 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
-// API Route for Chat
-app.post('/api/chat', async (req, res) => {
+// System prompt for Abdias
+const systemPrompt = `You are Abdias, a professional Tree Specialist from American Tree Experts.
+- You are helpful, knowledgeable, and friendly.
+- You specialize in tree trimming, removal, stump grinding, and health assessments.
+- Your goal is to help customers and encourage them to schedule a free assessment.
+- If asked about prices, give a rough estimate ($500-$2000) but emphasize that an on-site assessment is needed for accuracy.
+- Keep responses concise and conversational (2-4 sentences max).
+- If the user seems ready to book, ask for their name and phone number.
+- Company Phone: 812-457-3433.
+- Company Email: Thetreexperts@gmail.com
+- Location: Evansville, IN
+- Licensed, Trained & Insured since 1997.`;
+
+// Streaming API Route for Chat
+app.post('/api/chat/stream', async (req, res) => {
     try {
         const { message, history } = req.body;
 
@@ -33,44 +46,46 @@ app.post('/api/chat', async (req, res) => {
             return res.status(400).json({ error: 'Message is required' });
         }
 
-        // System prompt to define the bot's personality
-        const systemPrompt = `You are Abdias, a professional Tree Specialist from American Tree Experts.
-    - You are helpful, knowledgeable, and friendly.
-    - You specialize in tree trimming, removal, stump grinding, and health assessments.
-    - Your goal is to help customers and encourage them to schedule a free assessment.
-    - If asked about prices, give a rough estimate ($500-$2000) but emphasize that an on-site assessment is needed for accuracy.
-    - Keep responses concise and conversational.
-    - If the user seems ready to book, ask for their name and phone number.
-    - Company Phone: 812-457-3433.`;
+        // Set SSE headers
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
 
-        // Prepare messages for OpenAI
-        // We include a simplified history to maintain context
         const messages = [
             { role: 'system', content: systemPrompt },
-            ...history.slice(-5).map(msg => ({
+            ...(history || []).slice(-6).map(msg => ({
                 role: msg.sender === 'user' ? 'user' : 'assistant',
                 content: msg.text
             })),
             { role: 'user', content: message }
         ];
 
-        const completion = await openai.chat.completions.create({
-            model: 'gpt-3.5-turbo', // or 'gpt-4' if you have access and budget
+        const stream = await openai.chat.completions.create({
+            model: 'gpt-4o-mini',
             messages: messages,
-            max_tokens: 150,
+            max_tokens: 200,
             temperature: 0.7,
+            stream: true,
         });
 
-        const botResponse = completion.choices[0].message.content;
+        for await (const chunk of stream) {
+            const content = chunk.choices[0]?.delta?.content;
+            if (content) {
+                res.write(`data: ${JSON.stringify({ content })}\n\n`);
+            }
+        }
 
-        res.json({ response: botResponse });
+        res.write('data: [DONE]\n\n');
+        res.end();
 
     } catch (error) {
-        console.error('Error calling OpenAI:', error);
-        res.status(500).json({
-            error: 'Failed to get response from AI',
-            details: error.message
-        });
+        console.error('Error in streaming chat:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Failed to get response from AI' });
+        } else {
+            res.write(`data: ${JSON.stringify({ error: 'Stream interrupted' })}\n\n`);
+            res.end();
+        }
     }
 });
 

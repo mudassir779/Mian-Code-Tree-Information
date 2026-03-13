@@ -306,20 +306,76 @@ const Chatbot = () => {
     setShowQuickReplies(false);
     setIsTyping(true);
 
-    // Use local FAQ responses (no API needed)
-    const responseText = getLocalResponse(textToSend);
+    const botMessageId = Date.now() + 1;
 
-    // Simulate typing delay for natural feel
-    setTimeout(() => {
-      const botMessage = {
-        id: Date.now() + 1,
+    try {
+      const response = await fetch('/api/chat/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: textToSend,
+          history: messages.slice(-10)
+        })
+      });
+
+      if (!response.ok) throw new Error('API failed');
+
+      setIsTyping(false);
+
+      // Add empty bot message that will fill in real-time
+      setMessages(prev => [...prev, {
+        id: botMessageId,
+        text: '',
+        sender: 'bot',
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') break;
+
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.content) {
+                setMessages(prev =>
+                  prev.map(msg =>
+                    msg.id === botMessageId
+                      ? { ...msg, text: msg.text + parsed.content }
+                      : msg
+                  )
+                );
+              }
+            } catch (parseErr) {
+              // Skip invalid JSON chunks
+            }
+          }
+        }
+      }
+
+    } catch (error) {
+      console.error('Streaming failed, using local FAQ:', error);
+      setIsTyping(false);
+
+      // Fallback to local FAQ if API fails
+      const responseText = getLocalResponse(textToSend);
+      setMessages(prev => [...prev, {
+        id: botMessageId,
         text: responseText,
         sender: 'bot',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, botMessage]);
-      setIsTyping(false);
-    }, 800 + Math.random() * 700);
+      }]);
+    }
   };
 
   const handleFileUpload = (e) => {
